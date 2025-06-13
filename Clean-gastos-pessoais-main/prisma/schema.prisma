@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum for transaction type
+enum TipoTransacao {
+  RECEITA
+  DESPESA
+}
+
+model Usuario {
+  id           String       @id @default(uuid())
+  nome         String
+  email        String       @unique
+  senha        String
+  categorias   Categoria[]
+  metasMensais MetaMensal[]
+  transacoes   Transacao[]
+}
+
+model MetaMensal {
+  id          Int     @id @default(autoincrement())
+  valorLimite Decimal @db.Decimal(10, 2)
+  mes         Int
+  ano         Int
+  usuarioId   String
+  usuario     Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+}
+
+model Categoria {
+  id         Int         @id @default(autoincrement())
+  nome       String
+  usuarioId  String
+  usuario    Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  transacoes Transacao[]
+}
+
+model Transacao {
+  id          String        @id @default(uuid())
+  descricao   String?
+  data        DateTime
+  tipo        TipoTransacao
+  remetente   String?
+  valor       Decimal       @db.Decimal(10, 2)
+  usuarioId   String
+  categoriaId Int?
+
+  usuario   Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  categoria Categoria? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+}
